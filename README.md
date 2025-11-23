@@ -6,6 +6,10 @@ This app was created to solve a problem for a club night brand. A Spotify playli
 
 This app is currently designed to run locally.
 
+The whole app can be run via `npm start`in the root folder.
+
+A breakdown of what this does:
+
 The auth-server/authorization_code is run with `node app.js` to allow the user to log in to the app with Spotify and allow the app access to read and write in their Spotify account.
 
 The frontend is run with `npm start` to load the user interface.

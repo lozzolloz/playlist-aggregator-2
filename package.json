@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "start:auth": "cd auth-server/authorization_code && node app.js",
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && npm start",
+    "start": "concurrently \"npm run start:auth\" \"npm run start:frontend\" \"npm run start:backend\""
+  },
+  "devDependencies": {
+    "concurrently": "^6.5.1"
+  }
+}
