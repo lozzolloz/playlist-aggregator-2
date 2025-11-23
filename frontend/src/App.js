@@ -33,7 +33,14 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const [userId, setUserId] = useState("");
-  const years = [2019, 2020, 2021, 2022, 2023, 2024];
+
+  //this creates an array of years to be every year from 2019 to detected currentyear
+  const currentYear = new Date().getFullYear();
+const years = [];
+for (let year = 2019; year <= currentYear; year++) {
+  years.push(year);
+}
+
   const terms = ["Top Tracks", "New Tracks", "Top Artists", "New Artists"];
   const [getPlaysDisabled, setGetPlaysDisabled] = useState(true);
   const [pushPlaysDisabled, setPushPlaysDisabled] = useState(true);
@@ -47,7 +54,7 @@ function App() {
   const [editMode, setEditMode] = useState("export");
   const [allPlaylists, setAllPlaylists] = useState([]);
   const [inputTerm, setInputTerm] = useState("");
-  const [inputYear, setInputYear] = useState(2024);
+  const [inputYear, setInputYear] = useState(currentYear);
   const [newPlaylistInfo, setNewPlaylistInfo] = useState(null);
   const [importError, setImportError] = useState(false);
   const [importPlaylistConfirmView, setImportPlaylistConfirmView] =
@@ -184,26 +191,37 @@ function App() {
   };
 
   const pushPlays = async (selectedYear) => {
-    try {
-      // await fetch(`${urlServer}/removeallplays/${selectedYear}`, {
-      //   method: "POST",
-      // });
-      for (let i = 0; i < plays.length; i++) {
-        const response = await fetch(`${urlServer}/addplay/${selectedYear}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(plays[i]),
-        });
-
-        const data = await response.json();
-        console.log(data);
-      }
-    } catch (error) {
-      console.error(`Error pushing plays for ${selectedYear}:`, error);
+  try {
+    for (let i = 0; i < plays.length; i++) {
+      await fetch(`${urlServer}/addplay/${selectedYear}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(plays[i]),
+      });
     }
-  };
+
+    // Re-fetch all playlists in plays AFTER insertion
+    await getAllPlaylistsInPlays(); 
+
+    // Recalculate playlistsNotInPlays based on fresh data
+    const safeAllPlaylists = Array.isArray(allPlaylists) ? allPlaylists : [];
+    const safeAllPlaylistsInPlays = Array.isArray(allPlaylistsInPlays)
+      ? allPlaylistsInPlays
+      : [];
+
+    setPlaylistsNotInPlays(
+      safeAllPlaylists.filter(
+        (playlist) =>
+          !safeAllPlaylistsInPlays.some(
+            (item) => item.sourceplaylist === playlist.uri
+          )
+      )
+    );
+  } catch (error) {
+    console.error(`Error pushing plays for ${selectedYear}:`, error);
+  }
+};
+
 
   const pushPlaylist = async (newPlaylistInfo, inputYear) => {
     try {
@@ -435,6 +453,8 @@ useEffect(() => {
               inputYear={inputYear}
               setNewPlaylistInfo={setNewPlaylistInfo}
               getAllPlaylists={getAllPlaylists}
+              years={years}
+              currentYear={currentYear}
             />
           </div>
           <div>
@@ -450,6 +470,7 @@ useEffect(() => {
               setPlaylistsNotInPlays={setPlaylistsNotInPlays}
               plays={plays}
               getAllPlaylistsInPlays={getAllPlaylistsInPlays}
+              currentYear={currentYear}
             />
           </div>
           <PlaylistsTable

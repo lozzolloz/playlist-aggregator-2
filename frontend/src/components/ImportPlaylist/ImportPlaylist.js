@@ -14,6 +14,8 @@ export default function ImportPlaylist({
   inputYear,
   setNewPlaylistInfo,
   getAllPlaylists,
+  years,
+  currentYear
 
 }) {
   function handleInputTermChange(event) {
@@ -50,15 +52,16 @@ export default function ImportPlaylist({
         <div className="add-playlist__input">
           <input placeholder="URI" onChange={handleInputTermChange}></input>
 
-          <select className="year" onChange={handleInputYearChange}>
-            <option value="2024">2024</option>
-            {/* remember to update inputYear initial state in App.js if updating */}
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-            <option value="2019">2019</option>
-          </select>
+<select className="year" onChange={handleInputYearChange} value={inputYear}>
+  {years.slice().reverse().map(year => (
+    <option key={year} value={year}>
+      {year}
+    </option>
+  ))}
+</select>
+
+
+
 
           <button onClick={handleImportClick}>import</button>
         </div>

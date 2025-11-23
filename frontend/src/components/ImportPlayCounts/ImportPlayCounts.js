@@ -12,17 +12,18 @@ export default function ImportPlayCounts({
   setPlaylistsNotInPlays,
   plays,
   getAllPlaylistsInPlays,
+  currentYear
 }) {
   const handleGetClick = async () => {
     setPlayCountImportPage("loading");
-    await getPlays(2024);
+    await getPlays(currentYear);
     setPlayCountImportPage("confirm");
   };
 
   const handlePushClick = async () => {
     try {
       setPlayCountImportPage("loading");
-      await pushPlays(2024);
+      await pushPlays(currentYear);
       await getAllPlaylists();
       await getAllPlaylistsInPlays();
       setTimeout(() => {

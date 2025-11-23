@@ -1,3 +1,10 @@
+  //this creates an array of years to be every year from 2019 to detected currentyear
+  const currentYear = new Date().getFullYear();
+const years = [];
+for (let year = 2019; year <= currentYear; year++) {
+  years.push(year);
+}
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -71,17 +78,37 @@ app.post("/addplaylist", async (req, res) => {
 app.post("/addplay/:playYear", async (req, res) => {
   const { title, artists, uri, sourcePlaylist } = req.body;
   const { playYear } = req.params;
+
+  // Define a simple table schema for new years
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS plays${playYear} (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      artists TEXT[] NOT NULL,
+      uri TEXT NOT NULL,
+      sourcePlaylist TEXT
+     
+    );
+  `;
+
   try {
+    // Ensure the table exists
+    await pool.query(createTableQuery);
+
+    // Insert the play
     await pool.query(
-      `INSERT INTO plays${playYear} (title, artists, uri, sourcePlaylist) VALUES ($1, $2, $3, $4)`,
+      `INSERT INTO plays${playYear} (title, artists, uri, sourcePlaylist) 
+       VALUES ($1, $2, $3, $4)`,
       [title, artists, uri, sourcePlaylist]
     );
-    res.json({ message: "Play added successfully" });
+
+    res.json({ message: `Play added successfully to plays${playYear}` });
   } catch (error) {
     console.error("Error adding play:", error);
     res.status(500).json({ error: `Internal Server Error: ${error.message}` });
   }
 });
+
 
 app.post("/removeallplays/:year", async (req, res) => {
   const { year } = req.params;
@@ -128,19 +155,19 @@ app.get("/toptracks/:year", async (req, res) => {
 // Top tracks across all years
 app.get("/toptracksall", async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT UPPER(title) as title, artists, MIN(uri) as uri, COUNT(*) as count
-       FROM (
-         SELECT title, artists, uri FROM plays2019
-         UNION ALL SELECT title, artists, uri FROM plays2020
-         UNION ALL SELECT title, artists, uri FROM plays2021
-         UNION ALL SELECT title, artists, uri FROM plays2022
-         UNION ALL SELECT title, artists, uri FROM plays2023
-         UNION ALL SELECT title, artists, uri FROM plays2024
-       ) AS combined_plays
-       GROUP BY UPPER(title), artists
-       ORDER BY count DESC, title;`
-    );
+    // assume `years` is defined somewhere in scope or imported
+    const unionQueries = years
+      .map(year => `SELECT title, artists, uri FROM plays${year}`)
+      .join(" UNION ALL ");
+
+    const sql = `
+      SELECT UPPER(title) as title, artists, MIN(uri) as uri, COUNT(*) as count
+      FROM (${unionQueries}) AS combined_plays
+      GROUP BY UPPER(title), artists
+      ORDER BY count DESC, title;
+    `;
+
+    const result = await pool.query(sql);
     res.json(safeMapArtists(result.rows));
   } catch (error) {
     console.error(error);
@@ -148,26 +175,27 @@ app.get("/toptracksall", async (req, res) => {
   }
 });
 
+
 // All playlists in plays
 app.get("/allplaylistsinplays", async (req, res) => {
+
   try {
+    const unionQuery = years
+      .map(year => `SELECT sourcePlaylist FROM plays${year}`)
+      .join(" UNION ALL ");
+
     const result = await pool.query(
       `SELECT DISTINCT sourcePlaylist
-       FROM (
-         SELECT sourcePlaylist FROM plays2019
-         UNION ALL SELECT sourcePlaylist FROM plays2020
-         UNION ALL SELECT sourcePlaylist FROM plays2021
-         UNION ALL SELECT sourcePlaylist FROM plays2022
-         UNION ALL SELECT sourcePlaylist FROM plays2023
-         UNION ALL SELECT sourcePlaylist FROM plays2024
-       ) AS combinedTable;`
+       FROM (${unionQuery}) AS combinedTable;`
     );
+
     res.json(result.rows || []);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 // Top artists per year
 app.get("/topartists/:year", async (req, res) => {
@@ -191,25 +219,24 @@ app.get("/topartists/:year", async (req, res) => {
 // Top artists across all years
 app.get("/topartistsall", async (req, res) => {
   try {
+    const unionQuery = years
+      .map(year => `SELECT unnest(artists) as artist FROM plays${year}`)
+      .join(" UNION ALL ");
+
     const result = await pool.query(
       `SELECT artist, COUNT(*) as count
-       FROM (
-         SELECT unnest(artists) as artist FROM plays2019
-         UNION ALL SELECT unnest(artists) as artist FROM plays2020
-         UNION ALL SELECT unnest(artists) as artist FROM plays2021
-         UNION ALL SELECT unnest(artists) as artist FROM plays2022
-         UNION ALL SELECT unnest(artists) as artist FROM plays2023
-         UNION ALL SELECT unnest(artists) as artist FROM plays2024
-       ) AS unnested_artists
+       FROM (${unionQuery}) AS unnested_artists
        GROUP BY artist
        ORDER BY count DESC, artist;`
     );
+
     res.json(safeMapArtists(result.rows));
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 // New tracks
 app.get("/newtracks/:year", async (req, res) => {
