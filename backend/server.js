@@ -44,7 +44,9 @@ app.get("/playlists", async (req, res) => {
 app.get("/playlists/:year", async (req, res) => {
   const { year } = req.params;
   try {
-    const result = await pool.query("SELECT * FROM playlists WHERE year = $1", [year]);
+    const result = await pool.query("SELECT * FROM playlists WHERE year = $1", [
+      year,
+    ]);
     res.json(result.rows || []);
   } catch (error) {
     console.error("Error executing search query:", error);
@@ -55,7 +57,10 @@ app.get("/playlists/:year", async (req, res) => {
 app.post("/addplaylist", async (req, res) => {
   const { name, year, uri } = req.body;
   try {
-    await pool.query("INSERT INTO playlists (name, year, uri) VALUES ($1, $2, $3);", [name, year, uri]);
+    await pool.query(
+      "INSERT INTO playlists (name, year, uri) VALUES ($1, $2, $3);",
+      [name, year, uri]
+    );
     res.json({ message: "Playlist added successfully" });
   } catch (error) {
     console.error("Error posting to database", error);
@@ -266,7 +271,8 @@ app.get("/newartists/:year", async (req, res) => {
 
 // Close DB on exit
 process.on("SIGINT", () => {
-  pool.end()
+  pool
+    .end()
     .then(() => {
       console.log("Database connection closed");
       process.exit(0);
