@@ -61,7 +61,7 @@ export default function Navigation({
           </div>
           <div className="nav-buttons-div">
             <a
-              href="https://api.elephantsql.com/console/2bcf94cf-f4be-4b37-88a5-710bc55c7738/browser"
+              href="https://supabase.com/dashboard/project/xzfndofmwbpiugkvkvtv"
               target="_blank"
               rel="noreferrer"
             >

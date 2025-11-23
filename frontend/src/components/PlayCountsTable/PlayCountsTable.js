@@ -2,10 +2,15 @@ import React from "react";
 import "./PlayCountsTable.css";
 
 export default function PlayCountsTable({ searchResults }) {
+
+ // Ensure searchResults is always an array
+  const safeResults = Array.isArray(searchResults) ? searchResults : [];
+
+
   // Get unique headers excluding "uri"
   const headers = [
     ...new Set(
-      searchResults.flatMap((item) =>
+      safeResults.flatMap((item) =>
         Object.keys(item).filter((key) => key !== "uri")
       )
     ),
@@ -20,7 +25,7 @@ export default function PlayCountsTable({ searchResults }) {
   const countRowMap = {};
 
   // Define table rows with row numbers
-  const rows = searchResults.map((item, index) => {
+  const rows = safeResults.map((item, index) => {
     // If count is not in the map, add it with the current row number
     if (!countRowMap[item.count]) {
       countRowMap[item.count] = index + 1;

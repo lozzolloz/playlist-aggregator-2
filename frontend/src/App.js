@@ -357,16 +357,23 @@ function App() {
       : setHighlightedPlaylistsExist(false);
   }, [playlistsNotInPlays]);
 
-  useEffect(() => {
-    setPlaylistsNotInPlays(
-      allPlaylists.filter(
-        (playlist) =>
-          !allPlaylistsInPlays.some(
-            (item) => item.sourceplaylist === playlist.uri
-          )
-      )
-    );
-  }, [allPlaylists, allPlaylistsInPlays]);
+useEffect(() => {
+  // Make sure these are arrays even if the data hasn't loaded yet
+  const safeAllPlaylists = Array.isArray(allPlaylists) ? allPlaylists : [];
+  const safeAllPlaylistsInPlays = Array.isArray(allPlaylistsInPlays)
+    ? allPlaylistsInPlays
+    : [];
+
+  setPlaylistsNotInPlays(
+    safeAllPlaylists.filter(
+      (playlist) =>
+        !safeAllPlaylistsInPlays.some(
+          (item) => item.sourceplaylist === playlist.uri
+        )
+    )
+  );
+}, [allPlaylists, allPlaylistsInPlays]);
+
 
   return (
     <div id="app">
