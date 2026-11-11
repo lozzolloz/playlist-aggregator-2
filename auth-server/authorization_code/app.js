@@ -26,8 +26,8 @@ if (process.env.DEPLOYED === "true") {
   var urlFrontend = "";
   var urlServer = "";
 } else {
-  var urlFrontend = "http://localhost:3000";
-  var urlServer = "http://localhost:8888";
+  var urlFrontend = "http://127.0.0.1:3000";
+  var urlServer = "http://127.0.0.1:8888";
 }
 
 var redirect_uri = `${urlServer}/callback`; // Your redirect uri
